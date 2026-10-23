@@ -1,0 +1,23 @@
+@model CourseViewModel?
+@{
+    ViewData["Title"] = "Курс";
+}
+
+<a asp-action="Index" class="d-inline-block mb-3">&larr; Ко всем курсам</a>
+
+@if (ViewBag.Error is string error)
+{
+    <div class="alert alert-danger">@error</div>
+}
+else if (Model is not null)
+{
+    <h1 class="h3">@Model.Name</h1>
+    <p class="text-muted">@Model.Description</p>
+    <dl class="row">
+        <dt class="col-sm-3">Кредиты</dt><dd class="col-sm-9">@Model.Credits</dd>
+        <dt class="col-sm-3">Преподаватель</dt><dd class="col-sm-9">@(Model.Teacher?.FullName ?? "—")</dd>
+        <dt class="col-sm-3">Кафедра</dt><dd class="col-sm-9">@(Model.Teacher?.Department ?? "—")</dd>
+        <dt class="col-sm-3">Записано студентов</dt><dd class="col-sm-9">@Model.EnrolledStudentsCount</dd>
+        <dt class="col-sm-3">Создан</dt><dd class="col-sm-9">@Model.CreatedAt.ToString("yyyy-MM-dd")</dd>
+    </dl>
+}
