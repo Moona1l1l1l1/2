@@ -1,0 +1,99 @@
+@host = http://localhost:5080
+@password = Passw0rd!
+
+### 1. Аноним: список курсов -> 200
+GET {{host}}/api/courses
+
+### 2. Аноним: создать курс -> 401
+POST {{host}}/api/courses
+Content-Type: application/json
+
+{ "name": "Test", "description": "x", "credits": 3, "teacherId": 1 }
+
+### 3. Неверный пароль -> 401, JWT не выдан
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "userName": "student.alex", "password": "wrong" }
+
+### 4. Верные данные -> 200 + accessToken (скопируйте токен в переменные ниже)
+# @name loginAdmin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "userName": "admin", "password": "{{password}}" }
+
+###
+@adminToken = PASTE_ADMIN_TOKEN
+@gertsenToken = PASTE_TEACHER_GERTSEN_TOKEN
+@alexToken = PASTE_STUDENT_ALEX_TOKEN
+
+### 5. Просроченный JWT (запустите API с Jwt__AccessTokenMinutes=1, подождите >1 мин) -> 401
+GET {{host}}/api/auth/me
+Authorization: Bearer {{adminToken}}
+
+### 6. Student удаляет курс -> 403 (аутентифицирован, но нет прав)
+DELETE {{host}}/api/courses/1
+Authorization: Bearer {{alexToken}}
+
+### 7. Teacher (Gertsen) меняет оценку на своём курсе (enrollment 1: Web Services) -> 200
+PUT {{host}}/api/enrollments/1/grade
+Authorization: Bearer {{gertsenToken}}
+Content-Type: application/json
+
+{ "grade": 90 }
+
+### 8. Teacher (Gertsen) меняет оценку на чужом курсе (enrollment 2: Databases) -> 403
+PUT {{host}}/api/enrollments/2/grade
+Authorization: Bearer {{gertsenToken}}
+Content-Type: application/json
+
+{ "grade": 90 }
+
+### 9. Student (Alex, id=1) смотрит оценки другого студента (id=2) -> 403
+GET {{host}}/api/students/2/details
+Authorization: Bearer {{alexToken}}
+
+### 9b. То же через enrollments -> 403
+GET {{host}}/api/enrollments?studentId=2
+Authorization: Bearer {{alexToken}}
+
+### 10. Admin назначает роль (userId возьмите из GET /api/admin/users) -> 200
+GET {{host}}/api/admin/users
+Authorization: Bearer {{adminToken}}
+
+###
+POST {{host}}/api/admin/users/PASTE_USER_ID/roles
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "role": "Teacher" }
+
+### 11. Student назначает себе Admin -> 403
+POST {{host}}/api/admin/users/PASTE_ALEX_USER_ID/roles
+Authorization: Bearer {{alexToken}}
+Content-Type: application/json
+
+{ "role": "Admin" }
+
+### 12. v1 и v2 одновременно
+GET {{host}}/api/v1/courses
+###
+GET {{host}}/api/v2/courses
+###
+GET {{host}}/api/v1/courses/1
+###
+GET {{host}}/api/v2/courses/1
+###
+### Старый маршрут задания 1 тоже работает (= v1)
+GET {{host}}/api/courses/1
+
+### Регистрация (роль Student, без прав админа)
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "userName": "newuser", "email": "newuser@example.com", "password": "Passw0rd1" }
+
+### GET /api/auth/me
+GET {{host}}/api/auth/me
+Authorization: Bearer {{alexToken}}

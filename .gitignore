@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+.idea/
+*.user
+*.suo
+
+# секреты и локальные настройки
+appsettings.Local.json
+*.env
+secrets.json
